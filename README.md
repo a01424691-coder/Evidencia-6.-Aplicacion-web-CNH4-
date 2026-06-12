@@ -10,7 +10,7 @@
 ---
 
 # Problematica
-A pesar de su infraestructura, su sistema actual responde preguntas del pasado: cuántos servicios se cerraron, cuántos quedaron pendientes y qué distribuidores tuvieron más volumen. Pero no permite anticipar qué sucederá ni identificar con qué clientes o equipos actuar antes de perder oportunidades.
+A pesar de la infraestructura de CNHMX, su sistema actual responde preguntas del pasado: cuántos servicios se cerraron, cuántos quedaron pendientes y qué distribuidores tuvieron más volumen. Pero no permite anticipar qué sucederá ni identificar con qué clientes o equipos actuar antes de perder oportunidades.
 
 ## Descripción del proyecto
 
