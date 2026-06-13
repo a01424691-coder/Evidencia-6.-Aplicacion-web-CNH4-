@@ -10,11 +10,13 @@
 ---
 
 # Problematica
+CNH es el importador exclusivo en México de CNH Industrial, comercializador de las marcas New Holland y Case IH en maquinaria agrícola y de construcción. Actualmente, la empresa opera una red de 37 distribuidores y más de 200 puntos de venta, con aproximadamente 11.000 unidades en operación en el país.
 A pesar de la infraestructura de CNHMX, su sistema actual responde preguntas del pasado: cuántos servicios se cerraron, cuántos quedaron pendientes y qué distribuidores tuvieron más volumen. Pero no permite anticipar qué sucederá ni identificar con qué clientes o equipos actuar antes de perder oportunidades.
+Los datos que nos dieron nos muestran ese problema con 12,667 servicios en estatus Pendiente siendo el 53% del total, el 3.87% de los equipos se clasifican como fantasma sin OT registrada, y el 96.6% de los registros no tienen datos de contacto del cliente, lo que impide ejecutar cualquier intervención directa.
 
 ## Descripción del proyecto
 
-Este proyecto analiza la flota conectada de equipos agrícolas y de construcción de CNHMX con el objetivo de identificar oportunidades de monetización after-market no capturadas. A partir de datos de telemetría y registros de mantenimiento, se construyó un pipeline analítico completo que va desde la exploración de datos hasta un score prescriptivo de priorización de intervención por equipo.
+Este proyecto analiza la flota conectada de equipos de CNHMX con el objetivo de identificar oportunidades de monetización after-market no capturadas. A partir de datos de telemetría y registros de mantenimiento, se construyó un pipeline analítico completo que va desde la exploración de datos, transformación de datos, pruebas estadísticas, modelos de ML, hasta un score prescriptivo de priorización de intervención por equipo.
 
 La aplicación web integra tres capas de análisis: exploración descriptiva (EDA), modelado estadístico y de machine learning (H1–H12), e insights accionables con impacto directo en revenue.
 
@@ -23,19 +25,29 @@ La aplicación web integra tres capas de análisis: exploración descriptiva (ED
 ## Tecnologías utilizadas
 
 ### Framework web — Dash
-Se eligió **Dash** sobre Streamlit por tres razones concretas. Primero, Dash permite control total sobre el layout con componentes HTML/CSS nativos, lo que fue necesario para replicar la identidad visual de CNH Industrial. Segundo, los callbacks de Dash soportan interactividad multi-componente sin recargar la página, lo que permite que los filtros de distribuidor, marca y estado actualicen simultáneamente KPIs y gráficas. Tercero, el resultado final se comporta como una aplicación web real, no como un notebook convertido, lo que facilita su adopción operativa por parte de CNHMX.
+- Se eligió Dash sobre Streamlit por tres razones concretas. Primero, Dash permite control total sobre el layout con componentes HTML/CSS nativos, lo que fue necesario para replicar la identidad visual de CNH Industrial. 
+- Segundo, los callbacks de Dash soportan interactividad multi-componente sin recargar la página, lo que permite que los filtros de distribuidor, marca y estado actualicen simultáneamente KPIs y gráficas. 
+- Tercero, el resultado final se comporta como una aplicación web real, no como un notebook convertido, lo que facilita su adopción operativa por parte de CNHMX. 
+   - El routing multipágina se implementó con dcc.Location y un callback central que retorna el layout correspondiente a cada ruta (/dashboard, /modelos, /insights, etc.) sin recargar la página. 
+   - Los filtros de cada sección mantienen conjuntos de Inputs/Outputs independientes, lo que evita que un cambio en la sección de EDA dispare los callbacks de modelos. 
+   - Las figuras de modelos son objetos Plotly precalculados al inicio de la aplicación y referenciados directamente, en lugar de recalcularse en cada interacción, lo que reduce el tiempo de respuesta.
 
 ### Visualización — Plotly
-**Plotly** es la librería de visualización nativa de Dash y fue la elección natural dado que el equipo ya la usaba en el notebook de análisis. Permite gráficas interactivas (hover, zoom, filtros) sin configuración adicional, y soporta tipos de gráfica avanzados como mapas scatter, heatmaps, curvas de supervivencia y tablas formateadas, todos necesarios para el dashboard.
+- Es la librería de visualización nativa de Dash y fue la que utilizamos, ya que en nuestro notebook, ya la ocupábamos, además, permite hacer gráficas interactivas (hover, zoom, filtros) sin configuración adicional, y soporta tipos de gráfica avanzados como mapas scatter, heatmaps, curvas de supervivencia y tablas formateadas, todos necesarios para el dashboard.
 
 ### Procesamiento de datos — Pandas y NumPy
-**Pandas** fue la columna vertebral del pipeline de datos. El dataset maestro (`df_MASTER`) es un dataframe orientado a eventos de servicio resultado del merge entre telemetría a nivel equipo y registros de mantenimiento a nivel evento. La naturaleza del merge (one-to-many) requirió deduplicación cuidadosa por `no._serie` antes de calcular cualquier métrica de flota, lógica que se implementó íntegramente con Pandas. **NumPy** se usó para cálculos vectorizados en la construcción de curvas de supervivencia y transformaciones logarítmicas del modelo H7.
+- Pandas fue la columna vertebral del pipeline de datos. El dataset maestro (`df_MASTER`) es un dataframe orientado a eventos de servicio, resultado del merge entre telemetría a nivel equipo y registros de mantenimiento a nivel evento. La naturaleza del merge (one-to-many) requirió deduplicación cuidadosa por `no._serie` antes de calcular cualquier métrica de flota, lógica que se implementó íntegramente con Pandas. 
+- NumPy se usó para cálculos vectorizados en la construcción de curvas de supervivencia y transformaciones logarítmicas del modelo H7.
 
 ### Modelado estadístico y ML — scikit-learn, scipy, statsmodels
-**scikit-learn** se usó para el modelo Random Forest de H10 (predicción de incumplimiento 600→900 hrs) y para la normalización MinMaxScaler del heatmap de urgencia por estado. **scipy** proveyó los tests de Kruskal-Wallis (H1, H2, H5) y Mann-Whitney U (H3, H4). **statsmodels** se usó para las regresiones logísticas (H6, H8) y la regresión cuadrática (H7).
+- scikit-learn se usó para el modelo Random Forest de H10 (predicción de incumplimiento 600→900 hrs) y para la normalización MinMaxScaler del heatmap de urgencia por estado. 
+- scipy fue para los tests de Kruskal-Wallis (H1, H2, H5) y Mann-Whitney U (H3, H4). 
+- statsmodels se usó para las regresiones logísticas (H6, H8) y la regresión cuadrática (H7).
 
 ### Análisis de supervivencia — lifelines
-**lifelines** se usó para el ajuste de las curvas Kaplan-Meier y el modelo Cox Proportional Hazards de H11, que modelan la probabilidad de fuga del cliente (pérdida de la relación de servicio con la red oficial CNH) en función del horómetro acumulado, segmento y constructos latentes.
+- lifelines se usó para el ajuste de las curvas Kaplan-Meier y el modelo Cox Proportional Hazards de H11, que modelan la probabilidad de fuga del cliente (pérdida de la relación de servicio con la red oficial CNH) en función del horómetro acumulado, segmento y constructos latentes. 
+Se eligió sobre implementaciones manuales porque su API compatible con scikit-learn (.fit() / .predict_survival_function()) facilita la integración con el pipeline existente, y porque calcula directamente el concordance index (C-index = 0.58 en el modelo final) y los p-values de los hazard ratios sin código adicional. 
+Los hazard ratios resultantes (DOE: HR=0.9960 protector, DMU_Actual: HR=1.0032 de riesgo, CEM_Historico: HR=1.0025 de riesgo) son interpretables directamente por el equipo comercial de CNHMX sin conocimientos de ML.
 
 ---
 
@@ -44,7 +56,7 @@ Se eligió **Dash** sobre Streamlit por tres razones concretas. Primero, Dash pe
 ```
 CNH4/
 ├── app.py                        # Aplicación web Dash
-├── requirements.txt              # Dependencias
+├── requirements.txt              # Librerías de Python utilizadas
 ├── README.md                     # Este archivo
 ├── assets/
 │   └── style.css                 # Estilos del dashboard
@@ -67,12 +79,21 @@ CNH4/
 
 ## Instrucciones para correr la aplicación
 
+### 0. Requisitos previos
+Python 3.9 o superior. Se recomienda crear un entorno virtual antes de instalar las dependencias.
+
 ### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/CNH4/cnhmx-fleet-analytics.git
 cd cnhmx-fleet-analytics
 ```
+### 1.1. Crear la carpeta de estilos
+
+```bash
+mkdir assets
+```
+Coloca `style.css` dentro de la carpeta `assets/`. Sin este archivo la aplicación corre pero sin ningún estilo — el tema oscuro, la navbar, las cards y el layout de grid desaparecen. Dash sirve automáticamente cualquier archivo en esa carpeta, pero el archivo tiene que estar presente antes de levantar el servidor.
 
 ### 2. Instalar dependencias
 
@@ -115,18 +136,132 @@ python app.py
 Abre tu navegador en `http://127.0.0.1:8050`
 ---
 
+## Librerías Utilizadas en el NoteBook
+- `pandas`
+- `numpy`
+- `plotly`
+- `matplotlib`
+- `seaborn`
+- `scipy`
+- `statsmodels`
+- `scikit-learn`
+- `lifelines`
+- `missingno`
+- `dash`
+- `warnings`
+
+## Librerías utilizadas en todo el proyecto
+- `pandas`
+- `numpy`
+- `plotly`
+- `dash`
+- `dash-core-components`
+- `dash-html-components`
+- `matplotlib`
+- `seaborn`
+- `scipy`
+- `statsmodels`
+- `scikit-learn`
+- `lifelines`
+- `missingno`
+- `openpyxl`
+- `flask`
+- `gunicorn`
+
 ## Justificación del enfoque de predicción
 
-El pipeline analítico se organizó en torno a seis constructos latentes derivados de la literatura de marketing relacional y mantenimiento predictivo: **DOE** (Demanda Operativa del Equipo), **CAD** (Características de Adopción del Distribuidor), **CEM** (Cumplimiento Estándar de Mantenimiento), **DMU** (Desfase de Mantenimiento Urgente), **RP** (Resultado de Predicción) y **MA** (Monetización Aftermarket). DOE y CAD funcionan como variables exógenas, CEM y DMU como mediadores, y RP y MA como outputs.
+El pipeline analítico se organizó en torno a seis constructos latentes construidos en lo que podíamos construir con los datos de telemetría: **DOE** (Dependencia Operativa del Equipo), **CAD** (Capacidad del Distribuidor), **CEM** (Cumplimiento del Esquema de Mantenimiento), **DMU** (Desfase de Mantenimiento Uso Real), **RP** (Riesgo de Pérdida) y **MA** (Monetización Aftermarket). Organizadas en tres niveles: DOE y CAD funcionan como variables exógenas, CEM y DMU como mediadores, y RP y MA como salidas.
 
-El enfoque combina tres capas de modelado con objetivos distintos.
+## Contexto analítico
 
-La primera capa es **diagnóstica**, con tests no paramétricos (Kruskal-Wallis y Mann-Whitney U) para validar diferencias significativas en CEM y DMU entre grupos de interés — intervalos de servicio, meses del año, estados y segmentos. Esto establece la base empírica de los insights accionables sin asumir normalidad en los datos, lo que es apropiado dado que las distribuciones de horómetro y desfase son asimétricas.
+Cada constructo dio una o más preguntas de hipótesis estadística organizadas en cuatro tipos:
 
-La segunda capa es **predictiva**, con dos modelos complementarios. El primero es un Random Forest para clasificar equipos con alta probabilidad de incumplir el servicio de 900 hrs dado que ya pasaron el de 600 hrs (H10). Se eligió Random Forest sobre regresión logística porque captura interacciones no lineales entre DOE, CEM histórico y DMU sin requerir supuestos distribucionales. El segundo es un modelo de supervivencia Cox Proportional Hazards (H11) para estimar la tasa de hazard de fuga del cliente en función del tiempo operativo. El análisis de supervivencia es el enfoque correcto aquí porque la variable de interés es el tiempo hasta el evento (pérdida de la relación de servicio), no una clasificación binaria en un punto fijo del tiempo.
+**Descriptivas**
+- ¿El grado de cumplimiento del esquema de mantenimiento es constante sin importar si es un servicio menor (50 hrs) o mayor (1,500 hrs), o existe una variabilidad significativa en cómo se cumplen? (CEM)
+- ¿En qué meses del año se acumula, en promedio, el mayor desfase entre el uso real y el servicio esperado, y qué tan uniforme es este comportamiento entre todas las unidades? (DMU)
+- ¿Cómo se distribuye la dependencia operativa promedio y qué tanta heterogeneidad existe dentro de los equipos agrícolas versus los de construcción? (DOE)
+- ¿Cuál es el valor económico (en puntos de servicio) que se está dejando de capturar en promedio entre los equipos agrícolas y los de construcción, y qué tan dispersa está esa pérdida? (MA potencial no capturado)
 
-La tercera capa es **prescriptiva**, con un score compuesto (H12) que pondera DMU normalizado y número de omisiones reales para rankear equipos por urgencia de intervención. El score fue validado con chi-cuadrado (χ²=471.02, p=1.93×10⁻¹⁰⁴), confirmando que la distribución de éxito de OT no es aleatoria respecto al ranking, lo que sustenta su uso operativo para priorizar llamadas de campo y asignación de recursos de taller.
+**Descriptiva / Diagnóstica**
+- ¿La intensidad de uso operacional (DOE) tiene el mismo impacto sobre el desfase de mantenimiento (DMU) en todas las regiones, o existen zonas geográficas donde la exigencia operativa se traduce sistemáticamente en un mayor rompimiento del esquema de mantenimiento?
 
+**Diagnósticas**
+- ¿Qué variables operativas explican significativamente el bajo CEM, definido con una regla de negocio CEM < 0.5 o al menos 2 omisiones consecutivas, y cuál tiene mayor efecto sobre esa probabilidad?
+- ¿Existe una relación no lineal entre horas de DMU y frecuencia de OT ejecutadas, y en qué umbral de DMU la conversión deja de aumentar?
+- ¿La acumulación acelerada del DMU predice significativamente el riesgo de pérdida de clientes en el siguiente periodo?
+- ¿Las variables de telemetría explican suficientemente el CEM, o agregar variables agregadas no redundantes del distribuidor mejora significativamente la explicación del cumplimiento?
+
+**Predictivas**
+- Un cliente que acaba de cumplir su servicio de 600 horas, ¿qué probabilidad tiene de incumplir la ventana de tolerancia en su próximo servicio de 900 horas?
+- Considerando el historial de omisiones y la intensidad de uso actual, ¿cuál es la probabilidad de que un equipo "desaparezca" de la red de servicio (no genere ninguna orden de trabajo) en su próximo umbral de mantenimiento?
+
+**Prescriptiva**
+- ¿Cuál es el score de priorización de cada equipo combinando DMU y omisiones, y en qué orden deberían atenderse?
+
+El enfoque combina cuatro capas de modelado con objetivos distintos.
+- La primera capa es **descriptiva (H1–H5)** y responde qué está pasando en la flota: distribución del cumplimiento por intervalo, estacionalidad del desfase, diferencias operativas entre segmentos y pérdida de monetización por equipo.
+- La segunda capa es **diagnóstica (H6–H9)** y responde por qué ocurre: qué variables explican el bajo cumplimiento, dónde está el punto de inflexión entre desfase y frecuencia de OT, y cuánto agrega el distribuidor como variable explicativa sobre la telemetría sola.
+- La tercera capa es **predictiva (H10–H11)** y responde qué va a pasar: un Random Forest Classifier anticipa qué equipos incumplirán su próximo intervalo, y un modelo de supervivencia Kaplan-Meier + Cox PH estima el tiempo hasta la fuga operativa y los hazard ratios por variable.
+- La cuarta capa es **prescriptiva (H12)** y responde con quién actuar primero: un score compuesto de DMU y omisiones, validado con χ²=471.02 (p=1.93×10⁻¹⁰⁴), convierte las salidas de las capas anteriores en una lista ordenada de equipos accionable directamente por el equipo de distribuidores.
+
+### Capa 1 — Tests no paramétricos (H1–H5)
+
+Los constructos latentes del proyecto (CEM, DMU, DOE, MA) no siguen distribuciones normales. Las pruebas de normalidad confirmaron asimetría positiva y curtosis elevada en todos los casos, lo que invalida el uso de ANOVA, T-Test de Student y regresión lineal clásica como técnicas de comparación entre grupos. Por esta razón se optó por métodos robustos no paramétricos.
+**Kruskal-Wallis** se utilizó en H1, H2 y H5 para comparar más de dos grupos independientes sin asumir normalidad ni homogeneidad de varianzas. 
+- En H1 compara el error de cumplimiento (CEM) entre los nueve intervalos de servicio (50, 300, 600, 900, 1200, 1500, 1800, 2100, 2400 hrs), detectando si el comportamiento de cumplimiento varía según la madurez del equipo. 
+- En H2 evalúa estacionalidad en el desfase de mantenimiento (DMU) a lo largo de los doce meses del año, identificando junio como el mes de mayor acumulación de desfase. 
+- En H5 compara el DMU entre estados, filtrando únicamente aquellos con representatividad estadística suficiente (n ≥ 30) para construir el heatmap de urgencia geográfica.
+
+**Mann-Whitney U** se utilizó en H3 y H4 para comparar exactamente dos grupos independientes. 
+- En H3 contrasta la intensidad operativa promedio mensual (DOE) entre segmento agrícola y construcción, resultado que justifica los umbrales de alerta diferenciados. 
+- En H4 cuantifica si la monetización perdida por equipo (MA potencial no capturado) difiere significativamente entre ambos segmentos, resultado que sustenta la segmentación comercial del piloto.
+
+---
+
+### Capa 2 — Modelos diagnósticos (H6–H9)
+
+Una vez confirmadas las diferencias entre grupos, la capa diagnóstica busca explicar por qué ocurren y qué variables las determinan.
+
+**Regresión Logística (H6)** estima la probabilidad de que una unidad pertenezca al grupo de bajo cumplimiento operativo, definido por regla de negocio como CEM < 0.5 o al menos 2 omisiones consecutivas. Se eligió regresión logística porque el objetivo no es explicar el valor continuo del CEM sino clasificar el riesgo operativo binario de cada equipo. El modelo produce Odds Ratios interpretables que cuantifican el efecto marginal de cada variable sobre la probabilidad de incumplimiento, resultado directamente comunicable al equipo comercial de CNHMX sin conocimientos de ML.
+
+**Regresión Cuadrática (H7)** incorpora el término DMU² para capturar la relación no lineal entre el desfase acumulado y la frecuencia de órdenes de trabajo ejecutadas. El hallazgo central es que existe un punto de inflexión (≈ 400 hrs de desfase) a partir del cual el aumento del DMU deja de asociarse con mayor frecuencia de OT y comienza a reducirla, lo que indica que equipos con desfases extremos ya no están generando servicios dentro de la red oficial. Este resultado es el fundamento empírico del umbral de intervención temprana propuesto en el piloto.
+
+**Regresión Logística (H8)** estima la probabilidad de fuga operativa en el siguiente periodo. A diferencia de H6, este modelo incorpora una variable temporal que captura el crecimiento del DMU entre periodos consecutivos y no únicamente su nivel absoluto, lo que permite distinguir entre equipos con desfase alto estable y equipos con desfase que está acelerando, que representan el grupo de mayor riesgo inmediato.
+
+**Regresión Lineal Múltiple comparativa (H9)** confronta dos modelos: un modelo base que utiliza únicamente variables de telemetría pura (horas acumuladas, horómetro, promedio mensual, meses activos) y un modelo extendido que agrega variables agregadas a nivel distribuidor. El modelo base obtiene un R²=0.0143, confirmando que la telemetría por sí sola no predice el comportamiento de mantenimiento. El modelo extendido eleva el R² a 0.10, lo que demuestra que el factor organizacional del distribuidor tiene mayor peso predictivo que las variables del equipo. Se excluyeron explícitamente los componentes directos del CEM en ambos modelos para evitar data leakage y garantizar interpretabilidad causal.
+
+---
+
+### Capa 3 — Modelos predictivos (H10–H11)
+
+La capa predictiva anticipa eventos futuros sobre equipos individuales usando el historial acumulado en las capas anteriores como features.
+
+**Random Forest Classifier (H10)** predice la probabilidad de que un equipo incumpla su próximo intervalo de mantenimiento en la transición crítica 600→900 hrs. Se eligió Random Forest sobre modelos lineales porque los datos presentan relaciones no lineales entre predictores, presencia de outliers en horómetro y DMU, y desbalance de clases en la variable objetivo (la mayoría de equipos sí cumple). Random Forest maneja estas tres condiciones sin transformaciones adicionales y produce feature importances que identifican DOE_Prom_Mensual (38%), CEM_Historico (27%) y horómetro (18%) como los predictores más relevantes, resultado que valida empíricamente la estructura del nomological network del proyecto. El modelo utiliza variables rezagadas para evitar data leakage: el CEM histórico se calcula sobre intervalos anteriores al 600, no sobre el intervalo que se predice.
+
+**Random Forest Classifier (H11)** estima la probabilidad de fuga operativa: que un equipo desaparezca de la red sin generar ninguna orden de trabajo en su siguiente umbral de servicio. Se seleccionó la misma arquitectura que H10 por su capacidad para detectar eventos raros (la fuga es un evento de baja frecuencia relativa) y porque permite identificar directamente la importancia predictiva de CEM histórico y DOE como señales anticipadas de abandono.
+
+**Análisis de supervivencia Kaplan-Meier + Cox PH (H11)** complementa al Random Forest porque este último produce una probabilidad puntual estática en el momento de la consulta y no modela la trayectoria temporal del riesgo. El análisis de supervivencia agrega tres dimensiones que el Random Forest no puede proveer:
+
+- **Tiempo hasta el evento**: estima cuántas horas de operación adicional tiene cada equipo antes de que su probabilidad de fuga supere el 50%, lo que permite priorizar por urgencia temporal y no solo por probabilidad de ocurrencia.
+- **Segmentación por cohorte**: las curvas Kaplan-Meier por segmento muestran que la mediana de supervivencia difiere significativamente entre Agrícola y Construcción (log-rank test, p < 0.05), lo que justifica empíricamente los umbrales de alerta diferenciados: 500 hrs para Agrícola y 250 hrs para Construcción.
+- **Hazard Ratios interpretables**: el modelo Cox PH produce coeficientes directamente comunicables al equipo comercial. DOE_Prom_Mensual (HR=0.9960) actúa como factor protector: mayor uso operativo sostenido se asocia con menor probabilidad de fuga. DMU_Actual (HR=1.0032) y CEM_Historico (HR=1.0025) actúan como factores de riesgo: mayor desfase acumulado y peor historial de cumplimiento aumentan la probabilidad de abandono de la red. El concordance index del modelo es 0.58, valor modesto pero consistente con la naturaleza censurada y ruidosa de los datos de flota.
+
+Se eligió **lifelines** sobre implementaciones manuales porque su API compatible con scikit-learn facilita la integración con el pipeline existente y porque calcula directamente el concordance index y los p-values de los hazard ratios sin código adicional.
+
+---
+
+### Capa 4 — Modelo prescriptivo (H12)
+
+La capa prescriptiva no agrega un modelo predictivo adicional sino una función de ranking que convierte las salidas de las capas anteriores en una lista ordenada y accionable por el equipo de distribuidores.
+
+El `Score_Prioridad` combina `DMU_Actual` y `N_Omisiones_Reales` en un índice compuesto normalizado. La validación del score se realizó mediante prueba chi-cuadrado contra el método tradicional de priorización por antigüedad de horómetro: χ²=471.02, p=1.93×10⁻¹⁰⁴, confirmando que el score genera una distribución de conversión de órdenes de trabajo estadísticamente superior al método de referencia. Los 10 equipos con mayor score (`Rank_Score` más bajo) representan la lista de intervención inmediata para el piloto con TRACSAGRAL, ATN y MADISAGRAL.
+
+---
+
+### Limitaciones reconocidas
+
+El R² del modelo de telemetría pura (H9) es bajo (R²=0.0143), lo que confirma que la telemetría por sí sola no es suficiente para predecir el comportamiento de mantenimiento. Tres variables de sensor (combustible, distancia, t_encendido_hrs) fueron excluidas del pipeline por cobertura insuficiente (≈30–32% de registros con valor), lo que reduce la capacidad explicativa de los modelos basados en telemetría. El concordance index del modelo Cox (0.58) indica un poder discriminativo moderado, atribuible a la heterogeneidad de comportamientos dentro de cada segmento y a la ausencia de variables de contacto directo con el cliente (96.6% de registros sin datos de contacto). 
+Estas limitaciones están documentadas en la presentación ejecutiva y se proponen como áreas de mejora para el piloto de 9 meses, donde la incorporación de variables de CRM del distribuidor podría elevar significativamente el poder predictivo de los modelos.
 ---
 
 *Proyecto académico profesional — Tecnológico de Monterrey × CNHMX — 2026*
