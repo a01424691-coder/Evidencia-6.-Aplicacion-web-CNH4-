@@ -208,13 +208,17 @@ El enfoque combina cuatro capas de modelado con objetivos distintos.
 
 Los constructos latentes del proyecto (CEM, DMU, DOE, MA) no siguen distribuciones normales. Las pruebas de normalidad confirmaron asimetría positiva y curtosis elevada en todos los casos, lo que invalida el uso de ANOVA, T-Test de Student y regresión lineal clásica como técnicas de comparación entre grupos. Por esta razón se optó por métodos robustos no paramétricos.
 **Kruskal-Wallis** se utilizó en H1, H2 y H5 para comparar más de dos grupos independientes sin asumir normalidad ni homogeneidad de varianzas. 
-- En H1 compara el error de cumplimiento (CEM) entre los nueve intervalos de servicio (50, 300, 600, 900, 1200, 1500, 1800, 2100, 2400 hrs), detectando si el comportamiento de cumplimiento varía según la madurez del equipo. 
-- En H2 evalúa estacionalidad en el desfase de mantenimiento (DMU) a lo largo de los doce meses del año, identificando junio como el mes de mayor acumulación de desfase. 
-- En H5 compara el DMU entre estados, filtrando únicamente aquellos con representatividad estadística suficiente (n ≥ 30) para construir el heatmap de urgencia geográfica.
+
+En H1 compara el error de cumplimiento (CEM) entre los nueve intervalos de servicio (50, 300, 600, 900, 1200, 1500, 1800, 2100, 2400 hrs), detectando si el comportamiento de cumplimiento varía según la madurez del equipo. 
+
+En H2 evalúa estacionalidad en el desfase de mantenimiento (DMU) a lo largo de los doce meses del año, identificando junio como el mes de mayor acumulación de desfase. 
+
+En H5 compara el DMU entre estados, filtrando únicamente aquellos con representatividad estadística suficiente (n ≥ 30) para construir el heatmap de urgencia geográfica.
 
 **Mann-Whitney U** se utilizó en H3 y H4 para comparar exactamente dos grupos independientes. 
-- En H3 contrasta la intensidad operativa promedio mensual (DOE) entre segmento agrícola y construcción, resultado que justifica los umbrales de alerta diferenciados. 
-- En H4 cuantifica si la monetización perdida por equipo (MA potencial no capturado) difiere significativamente entre ambos segmentos, resultado que sustenta la segmentación comercial del piloto.
+En H3 contrasta la intensidad operativa promedio mensual (DOE) entre segmento agrícola y construcción, resultado que justifica los umbrales de alerta diferenciados. 
+
+En H4 cuantifica si la monetización perdida por equipo (MA potencial no capturado) difiere significativamente entre ambos segmentos, resultado que sustenta la segmentación comercial del piloto.
 
 ---
 
@@ -242,9 +246,11 @@ La capa predictiva anticipa eventos futuros sobre equipos individuales usando el
 
 **Análisis de supervivencia Kaplan-Meier + Cox PH (H11)** complementa al Random Forest porque este último produce una probabilidad puntual estática en el momento de la consulta y no modela la trayectoria temporal del riesgo. El análisis de supervivencia agrega tres dimensiones que el Random Forest no puede proveer:
 
-- **Tiempo hasta el evento**: estima cuántas horas de operación adicional tiene cada equipo antes de que su probabilidad de fuga supere el 50%, lo que permite priorizar por urgencia temporal y no solo por probabilidad de ocurrencia.
-- **Segmentación por cohorte**: las curvas Kaplan-Meier por segmento muestran que la mediana de supervivencia difiere significativamente entre Agrícola y Construcción (log-rank test, p < 0.05), lo que justifica empíricamente los umbrales de alerta diferenciados: 500 hrs para Agrícola y 250 hrs para Construcción.
-- **Hazard Ratios interpretables**: el modelo Cox PH produce coeficientes directamente comunicables al equipo comercial. DOE_Prom_Mensual (HR=0.9960) actúa como factor protector: mayor uso operativo sostenido se asocia con menor probabilidad de fuga. DMU_Actual (HR=1.0032) y CEM_Historico (HR=1.0025) actúan como factores de riesgo: mayor desfase acumulado y peor historial de cumplimiento aumentan la probabilidad de abandono de la red. El concordance index del modelo es 0.58, valor modesto pero consistente con la naturaleza censurada y ruidosa de los datos de flota.
+**Tiempo hasta el evento**: estima cuántas horas de operación adicional tiene cada equipo antes de que su probabilidad de fuga supere el 50%, lo que permite priorizar por urgencia temporal y no solo por probabilidad de ocurrencia.
+
+**Segmentación por cohorte**: las curvas Kaplan-Meier por segmento muestran que la mediana de supervivencia difiere significativamente entre Agrícola y Construcción (log-rank test, p < 0.05), lo que justifica empíricamente los umbrales de alerta diferenciados: 500 hrs para Agrícola y 250 hrs para Construcción.
+
+**Hazard Ratios interpretables**: el modelo Cox PH produce coeficientes directamente comunicables al equipo comercial. DOE_Prom_Mensual (HR=0.9960) actúa como factor protector: mayor uso operativo sostenido se asocia con menor probabilidad de fuga. DMU_Actual (HR=1.0032) y CEM_Historico (HR=1.0025) actúan como factores de riesgo: mayor desfase acumulado y peor historial de cumplimiento aumentan la probabilidad de abandono de la red. El concordance index del modelo es 0.58, valor modesto pero consistente con la naturaleza censurada y ruidosa de los datos de flota.
 
 Se eligió **lifelines** sobre implementaciones manuales porque su API compatible con scikit-learn facilita la integración con el pipeline existente y porque calcula directamente el concordance index y los p-values de los hazard ratios sin código adicional.
 
