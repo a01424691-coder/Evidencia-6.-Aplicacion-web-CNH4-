@@ -39,6 +39,16 @@ La aplicación web integra tres capas de análisis: exploración descriptiva (ED
 - Pandas fue la columna vertebral del pipeline de datos. El dataset maestro (`df_MASTER`) es un dataframe orientado a eventos de servicio, resultado del merge entre telemetría a nivel equipo y registros de mantenimiento a nivel evento. La naturaleza del merge (one-to-many) requirió deduplicación cuidadosa por `no._serie` antes de calcular cualquier métrica de flota, lógica que se implementó íntegramente con Pandas. 
 - NumPy se usó para cálculos vectorizados en la construcción de curvas de supervivencia y transformaciones logarítmicas del modelo H7.
 
+### Visualización exploratoria — Matplotlib y Seaborn
+- Matplotlib se usó como backend de renderizado durante el análisis exploratorio del notebook, principalmente para ajustar elementos visuales que Plotly no maneja en contexto estático, como la exportación de figuras para revisión intermedia. 
+- Seaborn se usó para los heatmaps de correlación y para visualizar distribuciones durante la fase de validación de supuestos, antes de migrar las gráficas finales a Plotly para el dashboard.
+
+### Calidad de datos — Missingno
+- Missingno se usó para visualizar patrones de valores faltantes en los datasets originales.
+
+### Exportación de resultados — Openpyxl
+- Openpyxl se usó para la exportación de tablas de resultados analíticos a formato Excel, incluyendo los rankings del modelo prescriptivo (H12) y los resúmenes de KPIs por distribuidor.
+
 ### Modelado estadístico y ML — scikit-learn, scipy, statsmodels
 - scikit-learn se usó para el modelo Random Forest de H10 (predicción de incumplimiento 600→900 hrs) y para la normalización MinMaxScaler del heatmap de urgencia por estado. 
 - scipy fue para los tests de Kruskal-Wallis (H1, H2, H5) y Mann-Whitney U (H3, H4). 
