@@ -65,24 +65,20 @@ Los hazard ratios resultantes (DOE: HR=0.9960 protector, DMU_Actual: HR=1.0032 d
 
 ```
 CNH4/
-├── app.py                        # Aplicación web Dash
+├── evidencia_6_notebook.py       # Aplicación web Dash
 ├── requirements.txt              # Librerías de Python utilizadas
 ├── README.md                     # Este archivo
-├── assets/
-│   └── style.css                 # Estilos del dashboard
-├── data/
-│   ├── df_master.csv             # Dataset maestro (telemetría × mantenimiento)
-│   ├── df_limpio_h1.csv          # Dataset H10: predicción incumplimiento
-│   ├── df_prescripcion.csv       # Dataset H12: score prescriptivo
-│   ├── df_supervivencia.csv      # Dataset H11: análisis de supervivencia
-│   ├── df_cox.csv                # Dataset Cox PH
-│   ├── df_surv.csv               # Dataset KM por segmento
-│   ├── df_diag_equipo.csv        # Dataset diagnóstico por equipo
-│   ├── df_h7.csv                 # Dataset regresión cuadrática DMU
-│   ├── df_master_modelos.csv     # Variables calculadas para modelos H1–H5
-│   └── df_insights.csv           # Variables para página de insights
-└── notebook/
-    └── Base_modelos_Graficas_Finales.ipynb   # Notebook completo de análisis
+├── Evidencia_6_NoteBook (5).ipynb  # Notebook completo de análisis
+├── df_master.csv                 # Dataset maestro (telemetría × mantenimiento)
+├── df_limpio_h1.csv              # Dataset H10: predicción incumplimiento
+├── df_prescripcion.csv           # Dataset H12: score prescriptivo
+├── df_supervivencia.csv          # Dataset H11: análisis de supervivencia
+├── df_cox.csv                    # Dataset Cox PH
+├── df_surv.csv                   # Dataset KM por segmento
+├── df_diag_equipo.csv            # Dataset diagnóstico por equipo
+├── df_h7.csv                     # Dataset regresión cuadrática DMU
+├── df_master_modelos.csv         # Variables calculadas para modelos H1–H5
+└── df_insights.csv               # Variables para página de insights
 ```
 
 ---
