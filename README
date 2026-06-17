@@ -65,10 +65,11 @@ Los hazard ratios resultantes (DOE: HR=0.9960 protector, DMU_Actual: HR=1.0032 d
 
 ```
 CNH4/
-├── evidencia_6_notebook.py       # Aplicación web Dash
-├── requirements.txt              # Librerías de Python utilizadas
+├── app.py                        # Aplicación web Dash
+├── requirements.txt              # Librerías de Python utilizadas y del Dash
 ├── README.md                     # Este archivo
-├── Evidencia_6_NoteBook (5).ipynb  # Notebook completo de análisis
+├── evidencia_6_notebook.py       # Notebook completo de análisis
+├── Presentacion.txt              # Presentación del proyecto
 ├── df_master.csv                 # Dataset maestro (telemetría × mantenimiento)
 ├── df_limpio_h1.csv              # Dataset H10: predicción incumplimiento
 ├── df_prescripcion.csv           # Dataset H12: score prescriptivo
@@ -78,7 +79,9 @@ CNH4/
 ├── df_diag_equipo.csv            # Dataset diagnóstico por equipo
 ├── df_h7.csv                     # Dataset regresión cuadrática DMU
 ├── df_master_modelos.csv         # Variables calculadas para modelos H1–H5
-└── df_insights.csv               # Variables para página de insights
+├── df_insights.csv               # Variables para página de insights
+└── assets/
+    └── style.css                 # Estilos del dashboard
 ```
 
 ---
@@ -89,27 +92,47 @@ CNH4/
 Python 3.9 o superior. Se recomienda crear un entorno virtual antes de instalar las dependencias.
 
 ### 1. Clonar el repositorio
-
 ```bash
 git clone https://github.com/CNH4/cnhmx-fleet-analytics.git
 cd cnhmx-fleet-analytics
 ```
-### 1.1. Crear la carpeta de estilos
-
-```bash
-mkdir assets
-```
-Coloca `style.css` dentro de la carpeta `assets/`. Sin este archivo la aplicación corre pero sin ningún estilo — el tema oscuro, la navbar, las cards y el layout de grid desaparecen. Dash sirve automáticamente cualquier archivo en esa carpeta, pero el archivo tiene que estar presente antes de levantar el servidor.
 
 ### 2. Instalar dependencias
-
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Colocar los archivos de datos
+### 3. Verificar archivos de datos
+Todos los archivos `.csv` necesarios ya están incluidos en el repositorio en la raíz del proyecto. No es necesario moverlos ni exportarlos desde el notebook.
 
-Asegúrate de que todos los archivos `.csv` listados en la sección anterior estén en la misma carpeta que `app.py`. Si partes del notebook, exporta los datasets con:
+### 4. Crear la carpeta de estilos
+```bash
+mkdir assets
+```
+Coloca `style.css` dentro de la carpeta `assets/`. Sin este archivo la aplicación corre pero sin ningún estilo — el tema oscuro, la navbar, las cards y el layout de grid desaparecen.
+
+### 5. Correr la aplicación
+```bash
+python app.py
+```
+Abre tu navegador en `http://127.0.0.1:8050`
+
+---
+
+## Actualización de datos
+
+Si en el futuro se desea actualizar el dashboard con nuevos datos:
+
+1. Reemplaza los tres archivos fuente en la misma ubicación donde están actualmente:
+   - `Mantenimientos 2024-2025.xlsx`
+   - `Reporte de Unidades del Día Anterior`
+   - `Horas 2024-2025`
+
+2. Los archivos deben mantener exactamente la misma estructura de columnas que los originales. Si CNHMX modifica el formato de exportación, será necesario revisar las secciones de limpieza y merge en el notebook antes de ejecutarlo.
+
+3. Ejecuta el notebook `evidencia_6_notebook.py` completo de principio a fin.
+
+4. Al terminar, exporta los dataframes actualizados con:
 
 ```python
 df_MASTER.to_csv("df_master.csv", index=False)
@@ -120,26 +143,12 @@ df_cox.to_csv("df_cox.csv", index=False)
 df_surv.to_csv("df_surv.csv", index=False)
 df_diag_equipo.to_csv("df_diag_equipo.csv", index=False)
 df_h7.to_csv("df_h7.csv", index=False)
-
-df_MASTER[['no._serie','distribuidor','estado','Segmento','fecha',
-           'Mes_Servicio','DMU_Servicio','DMU_Actual','DOE_Prom_Mensual',
-           'MA_Potencial_Perdido','CEM_Porcentaje_Error','servicio',
-           'pendientes','estatus','combustible',
-           '50','300','600','900','1200','1500','1800','2100','2400']
-].to_csv("df_insights.csv", index=False)
-
-df_MASTER[['Mes_Servicio','DMU_Servicio','CEM_Porcentaje_Error','servicio',
-           'DOE_Prom_Mensual','MA_Potencial_Perdido','Segmento']
-].to_csv("df_master_modelos.csv", index=False)
+df_master_modelos.to_csv("df_master_modelos.csv", index=False)
+df_insights.to_csv("df_insights.csv", index=False)
 ```
 
-### 4. Correr la aplicación
-
-```bash
-python app.py
+5. Reemplaza los `.csv` en la raíz del repositorio con los recién generados y vuelve a correr `app.py`.
 ```
-
-Abre tu navegador en `http://127.0.0.1:8050`
 ---
 
 ## Librerías Utilizadas en el NoteBook
