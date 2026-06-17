@@ -264,6 +264,8 @@ La capa predictiva anticipa eventos futuros sobre equipos individuales usando el
 
 Se eligió **lifelines** sobre implementaciones manuales porque su API compatible con scikit-learn facilita la integración con el pipeline existente y porque calcula directamente el concordance index y los p-values de los hazard ratios sin código adicional.
 
+**Nota** sobre el modelo Random Forest: El modelo Random Forest Classifier incluido en el notebook es un ejercicio exploratorio de análisis predictivo. No forma parte del dashboard interactivo; su propósito es documentar el proceso de modelado y sus resultados dentro del flujo analítico del proyecto.
+
 ---
 
 ### Capa 4 — Modelo prescriptivo (H12)
